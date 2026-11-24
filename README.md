@@ -65,11 +65,9 @@ Sweety/
 
 ---
 
-## 1. Configure the database
+## 1. Database configuration
 
-You don't have to create any database or tables by hand — **Prisma does that for
-you** when you run the migration in the next step. You only need a running
-PostgreSQL server and a connection string.
+All the Database Creation and Setup is handled by Prisma we just need to run it.
 
 Copy the server env file and set `DATABASE_URL` (and a `JWT_SECRET`):
 
@@ -83,8 +81,7 @@ cp .env.example .env
 postgresql://USER:PASSWORD@localhost:5432/sweety?schema=public
 ```
 
-Here `sweety` is just the database name Prisma will create on first run — change it
-if you prefer a different name.
+Instead of `sweety` right anything else if you want as the db name. 
 
 ---
 
@@ -93,8 +90,8 @@ if you prefer a different name.
 ```bash
 cd server
 npm install
-npx prisma migrate dev --name init   # creates the database + tables (first run only)
-npm run seed                          # creates a demo user + sample readings
+npx prisma migrate dev --name init   # creates the database + tables 
+npm run seed                          # creates a demo user + sample data
 npm run dev                           # starts the API on http://localhost:4000
 ```
 
@@ -102,7 +99,7 @@ npm run dev                           # starts the API on http://localhost:4000
 > so there is no separate "create database" step. `npm run seed` is safe to re-run —
 > it resets the demo user's data.
 
-**Demo credentials** (from the seed):
+**Demo credentials** (saved in the seed):
 ```
 email:    demo@sweety.app
 password: password123
@@ -152,27 +149,18 @@ cd client && npm test
 ## Notes
 
 ### Assumptions
-- **Dates are stored and compared as calendar days in UTC.** A reading's `date` has
-  no time component, which keeps "one reading per slot per day", the future-date
-  check and the report ranges unambiguous regardless of server timezone.
-- **"Maximum 4 readings per day" and the 4 fixed slots reinforce each other.** Because
-  there are exactly 4 slots and only one reading per slot per day, four is the natural
-  cap; both rules are still enforced explicitly with their own messages.
-- **Average is rounded to 1 decimal place**; highest/lowest/count are integers.
-- **The month-to-date chart plots one point per day (that day's average)** so the trend
-  line stays readable when a day has several readings. A shaded 70–180 mg/dl band gives
-  rough context (not medical advice).
-- **JWT is stored in `localStorage`** for simplicity (a fresher-level choice).
-- Login returns the same error for an unknown email and a wrong password, to avoid
-  leaking which emails are registered.
+- **Dates are stored and compared as calendar days in UTC.** 
+- **Maximum 4 readings per day and the 4 fixed slots reinforce each other.** 
+- **JWT is stored in `localStorage`** 
+- **Login returns the same error for an wrong email or a wrong password.**
 
 ### What I'd improve with more time
-- Move the JWT to an httpOnly cookie and add refresh tokens.
-- Add API-level integration tests (supertest) against a test database, not just the
-  pure-logic unit tests.
-- Server-side rate limiting on auth routes.
-- A proper toast/notification system instead of inline alerts, and optimistic UI updates.
-- Filter the readings list by date range and slot; export to CSV.
+- Add Reset/Forget Password Functionality
+- Add a Profile Section to manage basic details of the user.
+- Move the JWT to http cookie and add a referesh token.
+- Rate Limited for protected routes.
+- A toast notification system for optimistic UI.
+- Add a export to CSV button to export the data ..
 - The remaining bonuses: Docker Compose, Redis report caching, a BullMQ reminder job,
   and the doctor role.
 ```
