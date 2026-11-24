@@ -28,7 +28,7 @@ export default function Modal({ title, onClose, children }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 pt-20"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/40 p-4"
       onMouseDown={(e) => {
         // Only close when the backdrop itself (not the panel) is clicked.
         if (e.target === e.currentTarget) onClose();
