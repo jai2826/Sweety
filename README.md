@@ -89,6 +89,31 @@ postgresql://USER:PASSWORD@localhost:5432/sweety?schema=public
 
 ---
 
+## Quick start (run everything with one command)
+
+From the repository root, after creating the database and the two `.env` files:
+
+```bash
+npm run install:all   # installs root + server + client dependencies
+npm run setup         # applies DB migrations and seeds the demo data
+npm run dev           # starts the API AND the client together
+```
+
+`npm run dev` uses [`concurrently`](https://www.npmjs.com/package/concurrently) to
+run both apps in one terminal (API on :4000, client on :5173). Other root scripts:
+
+| Command | What it does |
+|---------|--------------|
+| `npm run dev` | Run server + client together (alias: `npm start`) |
+| `npm run install:all` | Install dependencies for root, server and client |
+| `npm run setup` | `prisma migrate deploy` + seed on the server |
+| `npm run seed` | Re-seed the demo data |
+| `npm test` | Run server tests then client tests |
+
+The per-app instructions below are equivalent if you prefer two terminals.
+
+---
+
 ## 2. Run the server
 
 ```bash
