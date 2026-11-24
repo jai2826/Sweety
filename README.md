@@ -19,7 +19,7 @@ readings a day** and views **daily and monthly reports**.
 - **Readings CRUD** — each reading has a *date*, a *time slot* (Morning (fasting), After breakfast, After lunch, After dinner) and a *value in mg/dl*, with all validation rules below.
 - **Reports** — Daily, Month-to-date and Monthly (previous month), each showing highest / lowest / average (1 decimal) / count, with a friendly empty state. The daily report also lists each reading with its slot.
 
-### Validation rules
+### Rules Validated
 | Rule | Error message |
 |------|---------------|
 | Value is required | `Please enter a glucose value.` |
@@ -28,12 +28,11 @@ readings a day** and views **daily and monthly reports**.
 | Maximum 4 readings per day | `You can add only 4 readings per day.` |
 | Date cannot be in the future | `Date cannot be in the future.` |
 
-### Bonus implemented
+### Bonus task completed
 - **Pagination** on `GET /readings` (`?page=1&limit=20`).
 - **Chart** — a line chart of the month-to-date readings (Recharts).
 - **Frontend tests** — React Testing Library tests for the reading form.
 
-(Not attempted: Docker, Redis caching, BullMQ jobs, doctor role.)
 
 ---
 
@@ -66,20 +65,17 @@ Sweety/
 
 ---
 
-## 1. Database setup
+## 1. Configure the database
 
-Create an empty database (any name — the example uses `sweety`):
+You don't have to create any database or tables by hand — **Prisma does that for
+you** when you run the migration in the next step. You only need a running
+PostgreSQL server and a connection string.
 
-```sql
-CREATE DATABASE sweety;
-```
-
-Then copy the server env file and point `DATABASE_URL` at your database:
+Copy the server env file and set `DATABASE_URL` (and a `JWT_SECRET`):
 
 ```bash
 cd server
 cp .env.example .env
-# edit .env: set DATABASE_URL and a JWT_SECRET
 ```
 
 `DATABASE_URL` format:
@@ -87,30 +83,8 @@ cp .env.example .env
 postgresql://USER:PASSWORD@localhost:5432/sweety?schema=public
 ```
 
----
-
-## Quick start (run everything with one command)
-
-From the repository root, after creating the database and the two `.env` files:
-
-```bash
-npm run install:all   # installs root + server + client dependencies
-npm run setup         # applies DB migrations and seeds the demo data
-npm run dev           # starts the API AND the client together
-```
-
-`npm run dev` uses [`concurrently`](https://www.npmjs.com/package/concurrently) to
-run both apps in one terminal (API on :4000, client on :5173). Other root scripts:
-
-| Command | What it does |
-|---------|--------------|
-| `npm run dev` | Run server + client together (alias: `npm start`) |
-| `npm run install:all` | Install dependencies for root, server and client |
-| `npm run setup` | `prisma migrate deploy` + seed on the server |
-| `npm run seed` | Re-seed the demo data |
-| `npm test` | Run server tests then client tests |
-
-The per-app instructions below are equivalent if you prefer two terminals.
+Here `sweety` is just the database name Prisma will create on first run — change it
+if you prefer a different name.
 
 ---
 
@@ -119,13 +93,14 @@ The per-app instructions below are equivalent if you prefer two terminals.
 ```bash
 cd server
 npm install
-npx prisma migrate dev --name init   # creates tables (first run only)
+npx prisma migrate dev --name init   # creates the database + tables (first run only)
 npm run seed                          # creates a demo user + sample readings
 npm run dev                           # starts the API on http://localhost:4000
 ```
 
-> Prefer not to create migration files? `npx prisma db push` will create the same
-> schema directly. `npm run seed` is safe to re-run — it resets the demo user's data.
+> `prisma migrate dev` creates the database and all tables from `prisma/schema.prisma`,
+> so there is no separate "create database" step. `npm run seed` is safe to re-run —
+> it resets the demo user's data.
 
 **Demo credentials** (from the seed):
 ```
