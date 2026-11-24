@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../lib/api.js';
-import { todayString } from '../lib/format.js';
+import { todayString, formatDate } from '../lib/format.js';
 import { Button, Card, Alert, Field, Input } from '../components/ui.jsx';
 import ReadingForm from '../components/ReadingForm.jsx';
 import ReadingsTable from '../components/ReadingsTable.jsx';
 import Pagination from '../components/Pagination.jsx';
 import ReportsPanel from '../components/ReportsPanel.jsx';
+import Modal from '../components/Modal.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
 
 const PAGE_SIZE = 10;
 
@@ -19,7 +21,8 @@ export default function DashboardPage() {
 
   const [listData, setListData] = useState(null);
   const [report, setReport] = useState(null);
-  const [editing, setEditing] = useState(null);
+  const [editingReading, setEditingReading] = useState(null);
+  const [deletingReading, setDeletingReading] = useState(null);
   const [error, setError] = useState('');
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
@@ -48,30 +51,28 @@ export default function DashboardPage() {
     };
   }, [selectedDate, reloadKey]);
 
+  // Create (top form).
   const handleCreate = async (payload) => {
     await api.createReading(payload);
     setError('');
     reload();
   };
 
+  // Update (edit dialog). Throws on failure so the form shows the error.
   const handleUpdate = async (payload) => {
-    await api.updateReading(editing.id, payload);
-    setEditing(null);
+    await api.updateReading(editingReading.id, payload);
+    setEditingReading(null);
     setError('');
     reload();
   };
 
-  const handleDelete = async (reading) => {
-    if (!window.confirm(`Delete the ${reading.slotLabel} reading?`)) return;
-    try {
-      await api.deleteReading(reading.id);
-      setError('');
-      // Step back a page if we just emptied the last one.
-      if (listData?.data.length === 1 && page > 1) setPage((p) => p - 1);
-      else reload();
-    } catch (err) {
-      setError(err.message);
-    }
+  // Delete (confirm dialog). Throws on failure so the dialog shows the error.
+  const handleDelete = async () => {
+    await api.deleteReading(deletingReading.id);
+    setError('');
+    // Step back a page if we just emptied the last one.
+    if (listData?.data.length === 1 && page > 1) setPage((p) => p - 1);
+    else reload();
   };
 
   return (
@@ -94,17 +95,10 @@ export default function DashboardPage() {
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
         {error && <Alert>{error}</Alert>}
 
-        {/* Add / edit reading */}
+        {/* Add a reading */}
         <Card>
-          <h2 className="mb-4 text-base font-semibold text-slate-800">
-            {editing ? 'Edit reading' : 'Add a reading'}
-          </h2>
-          <ReadingForm
-            key={editing?.id ?? 'new'}
-            initial={editing}
-            onSubmit={editing ? handleUpdate : handleCreate}
-            onCancel={editing ? () => setEditing(null) : undefined}
-          />
+          <h2 className="mb-4 text-base font-semibold text-slate-800">Add a reading</h2>
+          <ReadingForm onSubmit={handleCreate} />
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -113,11 +107,8 @@ export default function DashboardPage() {
             <h2 className="mb-4 text-base font-semibold text-slate-800">Your readings</h2>
             <ReadingsTable
               readings={listData?.data ?? []}
-              onEdit={(r) => {
-                setEditing(r);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onDelete={handleDelete}
+              onEdit={(r) => setEditingReading(r)}
+              onDelete={(r) => setDeletingReading(r)}
             />
             <Pagination pagination={listData?.pagination} onPageChange={setPage} />
           </Card>
@@ -141,6 +132,30 @@ export default function DashboardPage() {
           </Card>
         </div>
       </main>
+
+      {/* Edit dialog */}
+      {editingReading && (
+        <Modal title="Edit reading" onClose={() => setEditingReading(null)}>
+          <ReadingForm
+            initial={editingReading}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingReading(null)}
+          />
+        </Modal>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {deletingReading && (
+        <ConfirmDialog
+          title="Delete reading"
+          message={`Delete the ${deletingReading.slotLabel} reading of ${deletingReading.value} mg/dl on ${formatDate(
+            deletingReading.date
+          )}? This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={handleDelete}
+          onClose={() => setDeletingReading(null)}
+        />
+      )}
     </div>
   );
 }
