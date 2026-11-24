@@ -1,0 +1,52 @@
+// Prisma schema for Sweety - blood glucose tracker
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+}
+
+enum Slot {
+  MORNING // Morning (fasting)
+  AFTER_BREAKFAST
+  AFTER_LUNCH
+  AFTER_DINNER
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String // bcrypt hash, never plain text
+  role      Role      @default(PATIENT)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  readings  Reading[]
+
+  @@map("users")
+}
+
+model Reading {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date // calendar day of the reading (no time component)
+  slot      Slot
+  value     Int // mg/dl, whole number 40-600
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One reading per slot per day, per user.
+  @@unique([userId, date, slot])
+  @@index([userId, date])
+  @@map("readings")
+}
